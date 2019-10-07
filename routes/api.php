@@ -19,4 +19,10 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 // Product
 // Route::middleware('auth:api')->get('/products', 'ProductController@index');
+
+
 Route::get('/products', 'ProductController@index');
+Route::get('/categories', 'ProductController@getCategories');
+Route::post('/products/create', 'ProductController@store');
+Route::post('/products/update/{id}', 'ProductController@update');
+Route::delete('/products/delete/{id}', 'ProductController@delete');
