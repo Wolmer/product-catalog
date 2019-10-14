@@ -45,7 +45,7 @@
                                     <td>
                                         <button class="btn btn-success" v-on:click="showProduct(product)">View</button>
                                         <button class="btn btn-primary" v-on:click="editProduct(product)">Edit</button>
-                                        <button class="btn btn-danger" v-on:click="deleteProduct(index)">Delete</button>
+                                        <button class="btn btn-danger" v-on:click="deleteProduct(product)">Delete</button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -145,6 +145,20 @@
                                     <span v-else>Close</span>
                                 </button>
                                 <button type="button" class="btn btn-primary" v-on:click="saveProduct()" v-if="modal.edit">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal" id="confirmationModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-body">
+                                <p>Did you want delete product <b>{{ modal.product.name }}</b> ?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" v-on:click="deleteProduct(modal.product, true)">Delete</button>
                             </div>
                         </div>
                     </div>
@@ -255,7 +269,7 @@
                 this.modal.errors  = [];
                 this.modal.product = item;
                 this.selectCategory(item.category.id);
-                this.openModal();
+                this.openProductModal();
             },
 
             createProduct() {
@@ -275,7 +289,7 @@
                         name: null,
                     }
                 };
-                this.openModal();
+                this.openProductModal();
             },
 
             editProduct(item) {
@@ -284,15 +298,22 @@
                 this.modal.action  = '/api/products/update/' + item.id;
                 this.modal.errors  = [];
                 this.modal.product = item;
-                this.openModal();
+                this.openProductModal();
             },
 
-            deleteProduct(key) {
-                var uri = '/api/products/delete/' + this.products[key].id;
+            deleteProduct(item, confirmation = false) {
+                if (confirmation) {
+                    var uri = '/api/products/delete/' + item.id;
 
-                axios.delete(uri).then(response => {
-                    this.products.splice(key, 1);
-                });
+                    axios.delete(uri).then(response => {
+                        this.products.splice(this.products.indexOf(item), 1);
+                        this.modal.success = response.data;
+                        this.closeConfirmationModal();
+                    });
+                } else {
+                    this.modal.product = item;
+                    this.openConfirmationModal();
+                }
             },
 
             saveProduct() {
@@ -316,7 +337,7 @@
                         this.modal.success = response.data;
 
                         this.getProducts();
-                        this.closeModal();
+                        this.closeProductModal();
                     })
                     .catch(error => {
                         this.modal.success = null;
@@ -352,12 +373,20 @@
                 this.modal.product.image    = URL.createObjectURL(this.modal.product.imageObj);
             },
 
-            openModal() {
+            openProductModal() {
                 $('#productModal').modal('show');
             },
 
-            closeModal() {
+            closeProductModal() {
                 $('#productModal').modal('hide');
+            },
+
+            openConfirmationModal() {
+                $('#confirmationModal').modal('show');
+            },
+
+            closeConfirmationModal() {
+                $('#confirmationModal').modal('hide');
             }
         },
         mounted() {

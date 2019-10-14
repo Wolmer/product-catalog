@@ -77,6 +77,10 @@ class ProductController extends Controller
     {
         $product = Product::find($id);
 
+        if(File::exists(public_path($product->image))) {
+            File::delete(public_path($product->image));
+        }
+
         $product->delete();
 
         return response()->json('Successfully deleted');

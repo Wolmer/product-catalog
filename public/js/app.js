@@ -2016,6 +2016,20 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
@@ -2106,7 +2120,7 @@ __webpack_require__.r(__webpack_exports__);
       this.modal.errors = [];
       this.modal.product = item;
       this.selectCategory(item.category.id);
-      this.openModal();
+      this.openProductModal();
     },
     createProduct: function createProduct() {
       this.modal.edit = true;
@@ -2125,7 +2139,7 @@ __webpack_require__.r(__webpack_exports__);
           name: null
         }
       };
-      this.openModal();
+      this.openProductModal();
     },
     editProduct: function editProduct(item) {
       this.modal.edit = true;
@@ -2133,15 +2147,26 @@ __webpack_require__.r(__webpack_exports__);
       this.modal.action = '/api/products/update/' + item.id;
       this.modal.errors = [];
       this.modal.product = item;
-      this.openModal();
+      this.openProductModal();
     },
-    deleteProduct: function deleteProduct(key) {
+    deleteProduct: function deleteProduct(item) {
       var _this2 = this;
 
-      var uri = '/api/products/delete/' + this.products[key].id;
-      axios["delete"](uri).then(function (response) {
-        _this2.products.splice(key, 1);
-      });
+      var confirmation = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+      if (confirmation) {
+        var uri = '/api/products/delete/' + item.id;
+        axios["delete"](uri).then(function (response) {
+          _this2.products.splice(_this2.products.indexOf(item), 1);
+
+          _this2.modal.success = response.data;
+
+          _this2.closeConfirmationModal();
+        });
+      } else {
+        this.modal.product = item;
+        this.openConfirmationModal();
+      }
     },
     saveProduct: function saveProduct() {
       var _this3 = this;
@@ -2162,7 +2187,7 @@ __webpack_require__.r(__webpack_exports__);
 
         _this3.getProducts();
 
-        _this3.closeModal();
+        _this3.closeProductModal();
       })["catch"](function (error) {
         _this3.modal.success = null;
 
@@ -2197,11 +2222,17 @@ __webpack_require__.r(__webpack_exports__);
       this.modal.product.imageObj = evt.target.files[0];
       this.modal.product.image = URL.createObjectURL(this.modal.product.imageObj);
     },
-    openModal: function openModal() {
+    openProductModal: function openProductModal() {
       $('#productModal').modal('show');
     },
-    closeModal: function closeModal() {
+    closeProductModal: function closeProductModal() {
       $('#productModal').modal('hide');
+    },
+    openConfirmationModal: function openConfirmationModal() {
+      $('#confirmationModal').modal('show');
+    },
+    closeConfirmationModal: function closeConfirmationModal() {
+      $('#confirmationModal').modal('hide');
     }
   },
   mounted: function mounted() {
@@ -37654,7 +37685,7 @@ var render = function() {
                           staticClass: "btn btn-danger",
                           on: {
                             click: function($event) {
-                              return _vm.deleteProduct(index)
+                              return _vm.deleteProduct(product)
                             }
                           }
                         },
@@ -38003,6 +38034,56 @@ var render = function() {
                           [_vm._v("Save")]
                         )
                       : _vm._e()
+                  ])
+                ])
+              ]
+            )
+          ]
+        ),
+        _vm._v(" "),
+        _c(
+          "div",
+          {
+            staticClass: "modal",
+            attrs: { id: "confirmationModal", tabindex: "-1", role: "dialog" }
+          },
+          [
+            _c(
+              "div",
+              { staticClass: "modal-dialog", attrs: { role: "document" } },
+              [
+                _c("div", { staticClass: "modal-content" }, [
+                  _c("div", { staticClass: "modal-body" }, [
+                    _c("p", [
+                      _vm._v("Did you want delete product "),
+                      _c("b", [_vm._v(_vm._s(_vm.modal.product.name))]),
+                      _vm._v(" ?")
+                    ])
+                  ]),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "modal-footer" }, [
+                    _c(
+                      "button",
+                      {
+                        staticClass: "btn btn-secondary",
+                        attrs: { type: "button", "data-dismiss": "modal" }
+                      },
+                      [_vm._v("Close")]
+                    ),
+                    _vm._v(" "),
+                    _c(
+                      "button",
+                      {
+                        staticClass: "btn btn-primary",
+                        attrs: { type: "button" },
+                        on: {
+                          click: function($event) {
+                            return _vm.deleteProduct(_vm.modal.product, true)
+                          }
+                        }
+                      },
+                      [_vm._v("Delete")]
+                    )
                   ])
                 ])
               ]
@@ -50282,14 +50363,15 @@ if (token) {
 /*!*******************************************************!*\
   !*** ./resources/js/components/ProductsComponent.vue ***!
   \*******************************************************/
-/*! exports provided: default */
+/*! no static exports found */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _ProductsComponent_vue_vue_type_template_id_5ecce49e___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ProductsComponent.vue?vue&type=template&id=5ecce49e& */ "./resources/js/components/ProductsComponent.vue?vue&type=template&id=5ecce49e&");
 /* harmony import */ var _ProductsComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ProductsComponent.vue?vue&type=script&lang=js& */ "./resources/js/components/ProductsComponent.vue?vue&type=script&lang=js&");
-/* empty/unused harmony star reexport *//* harmony import */ var _node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../node_modules/vue-loader/lib/runtime/componentNormalizer.js */ "./node_modules/vue-loader/lib/runtime/componentNormalizer.js");
+/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _ProductsComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__) if(__WEBPACK_IMPORT_KEY__ !== 'default') (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _ProductsComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__[key]; }) }(__WEBPACK_IMPORT_KEY__));
+/* harmony import */ var _node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../node_modules/vue-loader/lib/runtime/componentNormalizer.js */ "./node_modules/vue-loader/lib/runtime/componentNormalizer.js");
 
 
 
@@ -50319,7 +50401,7 @@ component.options.__file = "resources/js/components/ProductsComponent.vue"
 /*!********************************************************************************!*\
   !*** ./resources/js/components/ProductsComponent.vue?vue&type=script&lang=js& ***!
   \********************************************************************************/
-/*! exports provided: default */
+/*! no static exports found */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
