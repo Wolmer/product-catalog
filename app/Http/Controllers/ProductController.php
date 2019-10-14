@@ -8,6 +8,8 @@ use App\Http\Resources\ProductCollection;
 use App\Models\Category;
 use App\Http\Resources\CategoryCollection;
 
+use App\Http\Requests\StoreProduct;
+
 use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
 
@@ -23,10 +25,16 @@ class ProductController extends Controller
         return new CategoryCollection(Category::all());
     }
 
-    public function store(Request $request)
+    public function store(StoreProduct $request)
     {
-        $image    = $this->uploadImage(request()->image);
-        $product  = new Product([
+        $request->validated();
+
+        $image = null;
+        if (request()->image) {
+            $image = $this->uploadImage(request()->image);
+        }
+
+        $product   = new Product([
             'category_id' => $request->get('category_id'),
             'name'        => $request->get('name'),
             'description' => $request->get('description'),
@@ -39,12 +47,14 @@ class ProductController extends Controller
         return response()->json('successfully added');
     }
 
-    public function update($id, Request $request)
+    public function update($id, StoreProduct $request)
     {
+        $request->validated();
+
         $product = Product::find($id);
         $image   = $product->image;
 
-        if (request()->image !== 'undefined') {
+        if (request()->image) {
             $image = $this->uploadImage(request()->image);
 
             if(File::exists(public_path($product->image))) {

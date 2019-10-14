@@ -76,6 +76,12 @@
                                 </button>
                             </div>
                             <div class="modal-body">
+                                <div v-if="validationErrors.length > 0">
+                                    <ul class="alert alert-danger">
+                                        <li v-for="(value) in validationErrors">{{ value }}</li>
+                                    </ul>
+                                </div>
+
                                 <div class="form-group">
                                     <label for="inputName">Name</label>
                                     <input type="text" class="form-control" id="inputName"
@@ -146,7 +152,6 @@
 
 <script>
     export default {
-                    image: null,
         data () {
             return {
                 csrf: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -163,6 +168,7 @@
                 modal: {
                     edit: false,
                     title: 'Create Product',
+                    errors: [],
                     product: {
                         id: 0,
                         name: '',
@@ -213,6 +219,12 @@
                     });
 
                 return paginatedProducts;
+            },
+
+            validationErrors(){
+                let errors = Object.values(this.modal.errors);
+                errors     = errors.flat();
+                return errors;
             }
         },
         methods: {
@@ -235,6 +247,7 @@
             showProduct(item) {
                 this.modal.edit    = false;
                 this.modal.title   = 'View Product';
+                this.modal.errors  = [];
                 this.modal.product = item;
                 this.selectCategory(item.category.id);
                 this.openModal();
@@ -244,6 +257,7 @@
                 this.modal.edit    = true;
                 this.modal.title   = 'New Product';
                 this.modal.action  = '/api/products/create';
+                this.modal.errors  = [];
                 this.modal.product = {
                     id: null,
                     name: null,
@@ -263,6 +277,7 @@
                 this.modal.edit    = true;
                 this.modal.title   = 'Edit Product';
                 this.modal.action  = '/api/products/update/' + item.id;
+                this.modal.errors  = [];
                 this.modal.product = item;
                 this.openModal();
             },
@@ -276,15 +291,15 @@
             },
 
             saveProduct() {
-                this.closeModal();
 
                 let saveData = new FormData();
-                saveData.append('id',           this.modal.product.id);
-                saveData.append('name',         this.modal.product.name);
-                saveData.append('description',  this.modal.product.description);
-                saveData.append('category_id',  this.modal.product.category.id);
-                saveData.append('price',        this.modal.product.price);
-                saveData.append('image',        this.modal.product.imageObj);
+
+                if (this.modal.product.id)          saveData.append('id',           this.modal.product.id);
+                if (this.modal.product.name)        saveData.append('name',         this.modal.product.name);
+                if (this.modal.product.description) saveData.append('description',  this.modal.product.description);
+                if (this.modal.product.category.id) saveData.append('category_id',  this.modal.product.category.id);
+                if (this.modal.product.price)       saveData.append('price',        this.modal.product.price);
+                if (this.modal.product.imageObj)    saveData.append('image',        this.modal.product.imageObj);
 
                 axios
                     .post(this.modal.action, saveData, {
@@ -294,8 +309,14 @@
                     })
                     .then((response) => {
                         this.getProducts();
+                        this.closeModal();
                     })
-                    .catch(error => console.log(error));
+                    .catch(error => {
+                        console.log(error.response);
+                        if (error.response.status == 422){
+                            this.modal.errors = error.response.data.errors;
+                        }
+                    });
             },
 
             selectCategory(id) {

@@ -2006,8 +2006,13 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
-  image: null,
   data: function data() {
     return {
       csrf: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -2024,6 +2029,7 @@ __webpack_require__.r(__webpack_exports__);
       modal: {
         edit: false,
         title: 'Create Product',
+        errors: [],
         product: {
           id: 0,
           name: '',
@@ -2066,6 +2072,11 @@ __webpack_require__.r(__webpack_exports__);
         if (index >= start && index < end) return true;
       });
       return paginatedProducts;
+    },
+    validationErrors: function validationErrors() {
+      var errors = Object.values(this.modal.errors);
+      errors = errors.flat();
+      return errors;
     }
   },
   methods: {
@@ -2087,6 +2098,7 @@ __webpack_require__.r(__webpack_exports__);
     showProduct: function showProduct(item) {
       this.modal.edit = false;
       this.modal.title = 'View Product';
+      this.modal.errors = [];
       this.modal.product = item;
       this.selectCategory(item.category.id);
       this.openModal();
@@ -2095,6 +2107,7 @@ __webpack_require__.r(__webpack_exports__);
       this.modal.edit = true;
       this.modal.title = 'New Product';
       this.modal.action = '/api/products/create';
+      this.modal.errors = [];
       this.modal.product = {
         id: null,
         name: null,
@@ -2113,6 +2126,7 @@ __webpack_require__.r(__webpack_exports__);
       this.modal.edit = true;
       this.modal.title = 'Edit Product';
       this.modal.action = '/api/products/update/' + item.id;
+      this.modal.errors = [];
       this.modal.product = item;
       this.openModal();
     },
@@ -2127,22 +2141,27 @@ __webpack_require__.r(__webpack_exports__);
     saveProduct: function saveProduct() {
       var _this3 = this;
 
-      this.closeModal();
       var saveData = new FormData();
-      saveData.append('id', this.modal.product.id);
-      saveData.append('name', this.modal.product.name);
-      saveData.append('description', this.modal.product.description);
-      saveData.append('category_id', this.modal.product.category.id);
-      saveData.append('price', this.modal.product.price);
-      saveData.append('image', this.modal.product.imageObj);
+      if (this.modal.product.id) saveData.append('id', this.modal.product.id);
+      if (this.modal.product.name) saveData.append('name', this.modal.product.name);
+      if (this.modal.product.description) saveData.append('description', this.modal.product.description);
+      if (this.modal.product.category.id) saveData.append('category_id', this.modal.product.category.id);
+      if (this.modal.product.price) saveData.append('price', this.modal.product.price);
+      if (this.modal.product.imageObj) saveData.append('image', this.modal.product.imageObj);
       axios.post(this.modal.action, saveData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       }).then(function (response) {
         _this3.getProducts();
+
+        _this3.closeModal();
       })["catch"](function (error) {
-        return console.log(error);
+        console.log(error.response);
+
+        if (error.response.status == 422) {
+          _this3.modal.errors = error.response.data.errors;
+        }
       });
     },
     selectCategory: function selectCategory(id) {
@@ -37702,6 +37721,19 @@ var render = function() {
                   ]),
                   _vm._v(" "),
                   _c("div", { staticClass: "modal-body" }, [
+                    _vm.validationErrors.length > 0
+                      ? _c("div", [
+                          _c(
+                            "ul",
+                            { staticClass: "alert alert-danger" },
+                            _vm._l(_vm.validationErrors, function(value) {
+                              return _c("li", [_vm._v(_vm._s(value))])
+                            }),
+                            0
+                          )
+                        ])
+                      : _vm._e(),
+                    _vm._v(" "),
                     _c("div", { staticClass: "form-group" }, [
                       _c("label", { attrs: { for: "inputName" } }, [
                         _vm._v("Name")
