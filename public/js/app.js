@@ -2012,6 +2012,10 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
@@ -2030,6 +2034,7 @@ __webpack_require__.r(__webpack_exports__);
         edit: false,
         title: 'Create Product',
         errors: [],
+        success: null,
         product: {
           id: 0,
           name: '',
@@ -2153,11 +2158,13 @@ __webpack_require__.r(__webpack_exports__);
           'Content-Type': 'multipart/form-data'
         }
       }).then(function (response) {
+        _this3.modal.success = response.data;
+
         _this3.getProducts();
 
         _this3.closeModal();
       })["catch"](function (error) {
-        console.log(error.response);
+        _this3.modal.success = null;
 
         if (error.response.status == 422) {
           _this3.modal.errors = error.response.data.errors;
@@ -37531,6 +37538,16 @@ var render = function() {
           ]),
           _vm._v(" "),
           _c("div", { staticClass: "card-body" }, [
+            this.modal.success
+              ? _c("div", { staticClass: "alert alert-success" }, [
+                  _vm._v(
+                    "\n                        " +
+                      _vm._s(this.modal.success) +
+                      "\n                    "
+                  )
+                ])
+              : _vm._e(),
+            _vm._v(" "),
             _c("table", { staticClass: "table table-striped border" }, [
               _c("thead", [
                 _c("tr", [
@@ -37726,8 +37743,8 @@ var render = function() {
                           _c(
                             "ul",
                             { staticClass: "alert alert-danger" },
-                            _vm._l(_vm.validationErrors, function(value) {
-                              return _c("li", [_vm._v(_vm._s(value))])
+                            _vm._l(_vm.validationErrors, function(error) {
+                              return _c("li", [_vm._v(_vm._s(error))])
                             }),
                             0
                           )

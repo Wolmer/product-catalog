@@ -22,6 +22,10 @@
                     </div>
 
                     <div class="card-body">
+                        <div class="alert alert-success" v-if="this.modal.success">
+                            {{ this.modal.success }}
+                        </div>
+
                         <table class="table table-striped border">
                             <thead>
                                 <tr>
@@ -78,7 +82,7 @@
                             <div class="modal-body">
                                 <div v-if="validationErrors.length > 0">
                                     <ul class="alert alert-danger">
-                                        <li v-for="(value) in validationErrors">{{ value }}</li>
+                                        <li v-for="(error) in validationErrors">{{ error }}</li>
                                     </ul>
                                 </div>
 
@@ -169,6 +173,7 @@
                     edit: false,
                     title: 'Create Product',
                     errors: [],
+                    success: null,
                     product: {
                         id: 0,
                         name: '',
@@ -308,11 +313,13 @@
                         }
                     })
                     .then((response) => {
+                        this.modal.success = response.data;
+
                         this.getProducts();
                         this.closeModal();
                     })
                     .catch(error => {
-                        console.log(error.response);
+                        this.modal.success = null;
                         if (error.response.status == 422){
                             this.modal.errors = error.response.data.errors;
                         }

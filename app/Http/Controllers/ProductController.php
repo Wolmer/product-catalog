@@ -44,7 +44,7 @@ class ProductController extends Controller
 
         $product->save();
 
-        return response()->json('successfully added');
+        return response()->json('Successfully added');
     }
 
     public function update($id, StoreProduct $request)
@@ -70,7 +70,7 @@ class ProductController extends Controller
             'image'       => $image,
         ]);
 
-        return response()->json('successfully updated');
+        return response()->json('Successfully updated');
     }
 
     public function delete($id)
@@ -79,7 +79,7 @@ class ProductController extends Controller
 
         $product->delete();
 
-        return response()->json('successfully deleted');
+        return response()->json('Successfully deleted');
     }
 
     private function uploadImage($image)
