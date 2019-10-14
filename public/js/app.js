@@ -1984,24 +1984,45 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
       categories: [],
       products: [],
-      search: '',
+      table: {
+        search: '',
+        pageSize: 10,
+        totalPages: 1,
+        currentPage: 1,
+        currentSort: 'name',
+        currentSortDir: 'asc'
+      },
       modal: {
         edit: false,
         title: 'Create Product',
         product: {
-          id: null,
-          name: null,
-          description: null,
-          price: null,
-          image: null,
+          id: 0,
+          name: '',
+          description: '',
+          price: 0,
+          image: '',
           category: {
             id: 0,
-            name: null
+            name: ''
           }
         },
         category: 0,
@@ -2014,7 +2035,45 @@ __webpack_require__.r(__webpack_exports__);
       return "$ " + Number(value).toFixed(2);
     }
   },
+  computed: {
+    filteredList: function filteredList() {
+      var _this = this;
+
+      var filteredProducts = this.products.filter(function (products) {
+        return products.name.toLowerCase().includes(_this.table.search.toLowerCase());
+      }).sort(function (a, b) {
+        var modifier = 1;
+        if (_this.table.currentSortDir === 'desc') modifier = -1;
+        if (a[_this.table.currentSort] < b[_this.table.currentSort]) return -1 * modifier;
+        if (a[_this.table.currentSort] > b[_this.table.currentSort]) return 1 * modifier;
+        return 0;
+      });
+      this.table.totalPages = Math.ceil(filteredProducts.length / this.table.pageSize);
+      var paginatedProducts = filteredProducts.filter(function (row, index) {
+        var start = (_this.table.currentPage - 1) * _this.table.pageSize;
+        var end = _this.table.currentPage * _this.table.pageSize;
+        if (_this.table.currentPage > _this.table.totalPages) _this.table.currentPage = 1;
+        if (index >= start && index < end) return true;
+      });
+      return paginatedProducts;
+    }
+  },
   methods: {
+    nextPage: function nextPage() {
+      if (this.table.currentPage < this.table.totalPages) this.table.currentPage++;
+    },
+    prevPage: function prevPage() {
+      if (this.table.currentPage > 1) this.table.currentPage--;
+    },
+    sort: function sort(column) {
+      console.log('filtering sort by ' + column);
+
+      if (column === this.currentSort) {
+        this.currentSortDir = this.currentSortDir === 'asc' ? 'desc' : 'asc';
+      }
+
+      this.currentSort = column;
+    },
     showProduct: function showProduct(item) {
       this.modal.edit = false;
       this.modal.title = 'View Product';
@@ -2046,31 +2105,12 @@ __webpack_require__.r(__webpack_exports__);
       this.modal.product = item;
       this.openModal();
     },
-    selectCategory: function selectCategory(id) {
-      this.modal.category = id;
-    },
-    openModal: function openModal() {
-      $('#productModal').modal('show');
-    },
-    closeModal: function closeModal() {
-      $('#productModal').modal('hide');
-    },
-    getProducts: function getProducts() {
-      var _this = this;
-
-      axios.get('/api/products').then(function (response) {
-        return _this.products = response.data.data;
-      })["catch"](function (error) {
-        return console.log(error);
-      });
-    },
-    getCategories: function getCategories() {
+    deleteProduct: function deleteProduct(key) {
       var _this2 = this;
 
-      axios.get('/api/categories').then(function (response) {
-        return _this2.categories = response.data.data;
-      })["catch"](function (error) {
-        return console.log(error);
+      var uri = '/api/products/delete/' + this.products[key].id;
+      axios["delete"](uri).then(function (response) {
+        _this2.products.splice(key, 1);
       });
     },
     saveProduct: function saveProduct() {
@@ -2083,22 +2123,32 @@ __webpack_require__.r(__webpack_exports__);
         return console.log(error);
       });
     },
-    deleteProduct: function deleteProduct(key) {
+    selectCategory: function selectCategory(id) {
+      this.modal.category = id;
+    },
+    getProducts: function getProducts() {
       var _this4 = this;
 
-      var uri = '/api/products/delete/' + this.products[key].id;
-      axios["delete"](uri).then(function (response) {
-        _this4.products.splice(key, 1);
+      axios.get('/api/products').then(function (response) {
+        _this4.products = response.data.data;
+      })["catch"](function (error) {
+        return console.log(error);
       });
-    }
-  },
-  computed: {
-    filteredList: function filteredList() {
+    },
+    getCategories: function getCategories() {
       var _this5 = this;
 
-      return this.products.filter(function (products) {
-        return products.name.toLowerCase().includes(_this5.search.toLowerCase());
+      axios.get('/api/categories').then(function (response) {
+        return _this5.categories = response.data.data;
+      })["catch"](function (error) {
+        return console.log(error);
       });
+    },
+    openModal: function openModal() {
+      $('#productModal').modal('show');
+    },
+    closeModal: function closeModal() {
+      $('#productModal').modal('hide');
     }
   },
   mounted: function mounted() {
@@ -37414,19 +37464,19 @@ var render = function() {
                     {
                       name: "model",
                       rawName: "v-model",
-                      value: _vm.search,
-                      expression: "search"
+                      value: _vm.table.search,
+                      expression: "table.search"
                     }
                   ],
                   staticClass: "form-control",
                   attrs: { type: "text", placeholder: "Search name" },
-                  domProps: { value: _vm.search },
+                  domProps: { value: _vm.table.search },
                   on: {
                     input: function($event) {
                       if ($event.target.composing) {
                         return
                       }
-                      _vm.search = $event.target.value
+                      _vm.$set(_vm.table, "search", $event.target.value)
                     }
                   }
                 })
@@ -37435,8 +37485,64 @@ var render = function() {
           ]),
           _vm._v(" "),
           _c("div", { staticClass: "card-body" }, [
-            _c("table", { staticClass: "table" }, [
-              _vm._m(1),
+            _c("table", { staticClass: "table table-striped border" }, [
+              _c("thead", [
+                _c("tr", [
+                  _c(
+                    "th",
+                    {
+                      attrs: { scope: "col" },
+                      on: {
+                        click: function($event) {
+                          return _vm.sort("id")
+                        }
+                      }
+                    },
+                    [_vm._v("#")]
+                  ),
+                  _vm._v(" "),
+                  _c(
+                    "th",
+                    {
+                      attrs: { scope: "col" },
+                      on: {
+                        click: function($event) {
+                          return _vm.sort("name")
+                        }
+                      }
+                    },
+                    [_vm._v("Name")]
+                  ),
+                  _vm._v(" "),
+                  _c(
+                    "th",
+                    {
+                      attrs: { scope: "col" },
+                      on: {
+                        click: function($event) {
+                          return _vm.sort("price")
+                        }
+                      }
+                    },
+                    [_vm._v("Price")]
+                  ),
+                  _vm._v(" "),
+                  _c(
+                    "th",
+                    {
+                      attrs: { scope: "col" },
+                      on: {
+                        click: function($event) {
+                          return _vm.sort("category.name")
+                        }
+                      }
+                    },
+                    [_vm._v("Category")]
+                  ),
+                  _vm._v(" "),
+                  _c("th", { attrs: { scope: "col" } }, [_vm._v("Actions")])
+                ])
+              ]),
               _vm._v(" "),
               _c(
                 "tbody",
@@ -37496,6 +37602,36 @@ var render = function() {
                 }),
                 0
               )
+            ]),
+            _vm._v(" "),
+            _c("span", { staticClass: "float-left text-center w-100 p-3" }, [
+              _c(
+                "button",
+                {
+                  staticClass: "btn btn-primary float-left",
+                  attrs: { disabled: _vm.table.currentPage == 1 },
+                  on: { click: _vm.prevPage }
+                },
+                [_vm._v("Previous")]
+              ),
+              _vm._v(
+                "\n\n                        Page " +
+                  _vm._s(_vm.table.currentPage) +
+                  " of " +
+                  _vm._s(_vm.table.totalPages) +
+                  "\n\n                        "
+              ),
+              _c(
+                "button",
+                {
+                  staticClass: "btn btn-primary float-right",
+                  attrs: {
+                    disabled: _vm.table.currentPage >= _vm.table.totalPages
+                  },
+                  on: { click: _vm.nextPage }
+                },
+                [_vm._v("Next")]
+              )
             ])
           ])
         ]),
@@ -37535,7 +37671,7 @@ var render = function() {
                       ]
                     ),
                     _vm._v(" "),
-                    _vm._m(2)
+                    _vm._m(1)
                   ]),
                   _vm._v(" "),
                   _c("div", { staticClass: "modal-body" }, [
@@ -37719,7 +37855,7 @@ var render = function() {
                       })
                     ]),
                     _vm._v(" "),
-                    _vm._m(3)
+                    _vm._m(2)
                   ]),
                   _vm._v(" "),
                   _c("div", { staticClass: "modal-footer" }, [
@@ -37768,24 +37904,6 @@ var staticRenderFns = [
     var _c = _vm._self._c || _h
     return _c("div", { staticClass: "col-sm-8" }, [
       _c("h3", [_vm._v("Product Manager")])
-    ])
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("thead", [
-      _c("tr", [
-        _c("th", { attrs: { scope: "col" } }, [_vm._v("#")]),
-        _vm._v(" "),
-        _c("th", { attrs: { scope: "col" } }, [_vm._v("Name")]),
-        _vm._v(" "),
-        _c("th", { attrs: { scope: "col" } }, [_vm._v("Price")]),
-        _vm._v(" "),
-        _c("th", { attrs: { scope: "col" } }, [_vm._v("Category")]),
-        _vm._v(" "),
-        _c("th", { attrs: { scope: "col" } }, [_vm._v("Actions")])
-      ])
     ])
   },
   function() {
@@ -50144,8 +50262,8 @@ __webpack_require__.r(__webpack_exports__);
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(/*! /home/vagrant/code/resources/js/app.js */"./resources/js/app.js");
-module.exports = __webpack_require__(/*! /home/vagrant/code/resources/sass/app.scss */"./resources/sass/app.scss");
+__webpack_require__(/*! /home/vagrant/projects/product-catalog/resources/js/app.js */"./resources/js/app.js");
+module.exports = __webpack_require__(/*! /home/vagrant/projects/product-catalog/resources/sass/app.scss */"./resources/sass/app.scss");
 
 
 /***/ })

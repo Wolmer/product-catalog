@@ -16,19 +16,19 @@
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <input class="form-control" type="text" v-model="search" placeholder="Search name"/>
+                                <input class="form-control" type="text" v-model="table.search" placeholder="Search name"/>
                             </div>
                         </div>
                     </div>
 
                     <div class="card-body">
-                        <table class="table">
+                        <table class="table table-striped border">
                             <thead>
                                 <tr>
-                                    <th scope="col">#</th>
-                                    <th scope="col">Name</th>
-                                    <th scope="col">Price</th>
-                                    <th scope="col">Category</th>
+                                    <th scope="col" v-on:click="sort('id')">#</th>
+                                    <th scope="col" v-on:click="sort('name')">Name</th>
+                                    <th scope="col" v-on:click="sort('price')">Price</th>
+                                    <th scope="col" v-on:click="sort('category.name')">Category</th>
                                     <th scope="col">Actions</th>
                                 </tr>
                             </thead>
@@ -46,6 +46,20 @@
                                 </tr>
                             </tbody>
                         </table>
+
+                        <span class="float-left text-center w-100 p-3">
+                            <button class="btn btn-primary float-left"
+                                    v-on:click="prevPage"
+                                    :disabled="table.currentPage == 1"
+                            >Previous</button>
+
+                            Page {{ table.currentPage }} of {{ table.totalPages }}
+
+                            <button class="btn btn-primary float-right"
+                                    v-on:click="nextPage"
+                                    :disabled="table.currentPage >= table.totalPages"
+                            >Next</button>
+                        </span>
                     </div>
                 </div>
 
@@ -128,19 +142,26 @@
             return {
                 categories: [],
                 products: [],
-                search: '',
+                table: {
+                    search: '',
+                    pageSize: 10,
+                    totalPages: 1,
+                    currentPage: 1,
+                    currentSort: 'name',
+                    currentSortDir: 'asc'
+                },
                 modal: {
                     edit: false,
                     title: 'Create Product',
                     product: {
-                        id: null,
-                        name: null,
-                        description: null,
-                        price: null,
-                        image: null,
+                        id: 0,
+                        name: '',
+                        description: '',
+                        price: 0,
+                        image: '',
                         category: {
                             id: 0,
-                            name: null,
+                            name: '',
                         }
                     },
                     category: 0,
@@ -153,8 +174,55 @@
                 return "$ " + Number(value).toFixed(2)
             }
         },
+        computed: {
+            filteredList() {
+                let filteredProducts = this.products
+                    .filter(products => {
+                        return products.name.toLowerCase().includes(
+                            this.table.search.toLowerCase()
+                        )
+                    })
+
+                    .sort((a, b) => {
+                        let modifier = 1;
+                        if(this.table.currentSortDir === 'desc') modifier = -1;
+                        if(a[this.table.currentSort] < b[this.table.currentSort]) return -1 * modifier;
+                        if(a[this.table.currentSort] > b[this.table.currentSort]) return 1 * modifier;
+                        return 0;
+                    });
+
+                this.table.totalPages = Math.ceil(filteredProducts.length / this.table.pageSize);
+
+                let paginatedProducts  = filteredProducts
+                    .filter((row, index) => {
+                        let start = (this.table.currentPage - 1) * this.table.pageSize;
+                        let end   = this.table.currentPage * this.table.pageSize;
+
+                        if(this.table.currentPage > this.table.totalPages) this.table.currentPage = 1;
+                        if(index >= start && index < end) return true;
+                    });
+
+                return paginatedProducts;
+            }
+        },
         methods: {
-            showProduct: function(item) {
+            nextPage() {
+                if(this.table.currentPage < this.table.totalPages) this.table.currentPage++;
+            },
+
+            prevPage() {
+                if(this.table.currentPage > 1) this.table.currentPage--;
+            },
+
+            sort(column) {
+                console.log('filtering sort by ' + column);
+                if(column === this.currentSort) {
+                    this.currentSortDir = this.currentSortDir === 'asc' ? 'desc' : 'asc';
+                }
+                this.currentSort = column;
+            },
+
+            showProduct(item) {
                 this.modal.edit    = false;
                 this.modal.title   = 'View Product';
                 this.modal.product = item;
@@ -162,7 +230,7 @@
                 this.openModal();
             },
 
-            createProduct: function() {
+            createProduct() {
                 this.modal.edit    = true;
                 this.modal.title   = 'New Product';
                 this.modal.action  = '/api/products/create';
@@ -180,7 +248,7 @@
                 this.openModal();
             },
 
-            editProduct: function(item) {
+            editProduct(item) {
                 this.modal.edit    = true;
                 this.modal.title   = 'Edit Product';
                 this.modal.action  = '/api/products/update/' + item.id;
@@ -188,35 +256,15 @@
                 this.openModal();
             },
 
-            selectCategory: function(id){
-                this.modal.category = id;
+            deleteProduct(key) {
+                var uri = '/api/products/delete/' + this.products[key].id;
+
+                axios.delete(uri).then(response => {
+                    this.products.splice(key, 1);
+                });
             },
 
-            openModal: function(){
-                $('#productModal').modal('show');
-            },
-
-            closeModal: function(){
-                $('#productModal').modal('hide');
-            },
-
-            getProducts: function() {
-                axios
-                    .get('/api/products')
-                    .then(response => (
-                        this.products = response.data.data
-                    ))
-                    .catch(error => console.log(error))
-            },
-
-            getCategories: function() {
-                axios
-                    .get('/api/categories')
-                    .then(response => (this.categories = response.data.data))
-                    .catch(error => console.log(error))
-            },
-
-            saveProduct: function() {
+            saveProduct() {
                 this.closeModal();
                 axios
                     .post(this.modal.action, this.modal.product)
@@ -226,21 +274,32 @@
                     .catch(error => console.log(error));
             },
 
-            deleteProduct: function(key) {
-                var uri = '/api/products/delete/' + this.products[key].id;
-
-                axios.delete(uri).then(response => {
-                    this.products.splice(key, 1);
-                });
+            selectCategory(id) {
+                this.modal.category = id;
             },
-        },
-        computed: {
-            filteredList() {
-                return this.products.filter(products => {
-                    return products.name.toLowerCase().includes(
-                        this.search.toLowerCase()
-                    )
-                })
+
+            getProducts() {
+                axios
+                    .get('/api/products')
+                    .then(response => {
+                        this.products = response.data.data;
+                    })
+                    .catch(error => console.log(error));
+            },
+
+            getCategories() {
+                axios
+                    .get('/api/categories')
+                    .then(response => (this.categories = response.data.data))
+                    .catch(error => console.log(error));
+            },
+
+            openModal() {
+                $('#productModal').modal('show');
+            },
+
+            closeModal() {
+                $('#productModal').modal('hide');
             }
         },
         mounted() {

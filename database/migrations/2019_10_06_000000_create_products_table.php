@@ -22,6 +22,7 @@ class CreateProductsTable extends Migration
             $table->decimal('price', 9, 3);
             $table->string('image')->nullable()->default(null);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
