@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Http\Resources\Product as ProductResource;
 use App\Http\Resources\ProductCollection;
 
 use App\Models\Category;
 use App\Http\Resources\CategoryCollection;
 
+use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -45,7 +45,11 @@ class ProductController extends Controller
         $image   = $product->image;
 
         if (request()->image !== 'undefined') {
-            $image   = $this->uploadImage(request()->image);
+            $image = $this->uploadImage(request()->image);
+
+            if(File::exists(public_path($product->image))) {
+                File::delete(public_path($product->image));
+            }
         }
 
         $product->update([
@@ -70,11 +74,11 @@ class ProductController extends Controller
 
     private function uploadImage($image)
     {
-        $imagePath = 'img/products';
+        $imagePath = '/img/products';
         $imageName = time() . '.' . $image->getClientOriginalExtension();
 
         request()->image->move(public_path($imagePath), $imageName);
 
-        return '/' . $imagePath . '/' . $imageName;
+        return $imagePath . '/' . $imageName;
     }
 }
