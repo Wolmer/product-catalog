@@ -117,8 +117,16 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="inputImage">Image</label>
-                                    <input type="file" class="form-control" id="inputImage" placeholder="Select image">
+                                    <p>
+                                        <label for="">Image Overview</label>
+                                        <button type="button" class="btn btn-link float-right" v-if="modal.edit" v-on:click="$refs.inputImage.click()">
+                                            <span v-if="modal.product.image">Change image</span>
+                                            <span v-else>Select an image</span>
+                                        </button>
+                                    </p>
+                                    <input style="display: none" ref="inputImage" type="file" @change="imageSelected" enctype="multipart/form-data">
+                                    <img class="img-thumbnail" v-if="modal.product.image" v-bind:src="modal.product.image">
+
                                 </div>
                             </div>
                             <div class="modal-footer">
@@ -138,8 +146,10 @@
 
 <script>
     export default {
+                    image: null,
         data () {
             return {
+                csrf: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 categories: [],
                 products: [],
                 table: {
@@ -240,6 +250,7 @@
                     description: null,
                     price: null,
                     image: null,
+                    imageObj: null,
                     category: {
                         id: 0,
                         name: null,
@@ -266,8 +277,21 @@
 
             saveProduct() {
                 this.closeModal();
+
+                let saveData = new FormData();
+                saveData.append('id',           this.modal.product.id);
+                saveData.append('name',         this.modal.product.name);
+                saveData.append('description',  this.modal.product.description);
+                saveData.append('category_id',  this.modal.product.category.id);
+                saveData.append('price',        this.modal.product.price);
+                saveData.append('image',        this.modal.product.imageObj);
+
                 axios
-                    .post(this.modal.action, this.modal.product)
+                    .post(this.modal.action, saveData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    })
                     .then((response) => {
                         this.getProducts();
                     })
@@ -292,6 +316,12 @@
                     .get('/api/categories')
                     .then(response => (this.categories = response.data.data))
                     .catch(error => console.log(error));
+            },
+
+            imageSelected(evt) {
+                evt.preventDefault();
+                this.modal.product.imageObj = evt.target.files[0];
+                this.modal.product.image    = URL.createObjectURL(this.modal.product.imageObj);
             },
 
             openModal() {

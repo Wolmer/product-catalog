@@ -17,6 +17,10 @@ class ProductCollection extends ResourceCollection
     {
         foreach ($this->collection as $key => $product) {
             $this->collection[$key]->category = Category::find($product->category_id);
+
+            if (!file_exists(public_path($product->image))) {
+                $this->collection[$key]->image = '/img/products/no-image.png';
+            }
         }
 
         return [

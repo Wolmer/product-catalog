@@ -1998,9 +1998,19 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
+  image: null,
   data: function data() {
     return {
+      csrf: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
       categories: [],
       products: [],
       table: {
@@ -2091,6 +2101,7 @@ __webpack_require__.r(__webpack_exports__);
         description: null,
         price: null,
         image: null,
+        imageObj: null,
         category: {
           id: 0,
           name: null
@@ -2117,7 +2128,18 @@ __webpack_require__.r(__webpack_exports__);
       var _this3 = this;
 
       this.closeModal();
-      axios.post(this.modal.action, this.modal.product).then(function (response) {
+      var saveData = new FormData();
+      saveData.append('id', this.modal.product.id);
+      saveData.append('name', this.modal.product.name);
+      saveData.append('description', this.modal.product.description);
+      saveData.append('category_id', this.modal.product.category.id);
+      saveData.append('price', this.modal.product.price);
+      saveData.append('image', this.modal.product.imageObj);
+      axios.post(this.modal.action, saveData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }).then(function (response) {
         _this3.getProducts();
       })["catch"](function (error) {
         return console.log(error);
@@ -2143,6 +2165,11 @@ __webpack_require__.r(__webpack_exports__);
       })["catch"](function (error) {
         return console.log(error);
       });
+    },
+    imageSelected: function imageSelected(evt) {
+      evt.preventDefault();
+      this.modal.product.imageObj = evt.target.files[0];
+      this.modal.product.image = URL.createObjectURL(this.modal.product.imageObj);
     },
     openModal: function openModal() {
       $('#productModal').modal('show');
@@ -37855,7 +37882,47 @@ var render = function() {
                       })
                     ]),
                     _vm._v(" "),
-                    _vm._m(2)
+                    _c("div", { staticClass: "form-group" }, [
+                      _c("p", [
+                        _c("label", { attrs: { for: "" } }, [
+                          _vm._v("Image Overview")
+                        ]),
+                        _vm._v(" "),
+                        _vm.modal.edit
+                          ? _c(
+                              "button",
+                              {
+                                staticClass: "btn btn-link float-right",
+                                attrs: { type: "button" },
+                                on: {
+                                  click: function($event) {
+                                    return _vm.$refs.inputImage.click()
+                                  }
+                                }
+                              },
+                              [
+                                _vm.modal.product.image
+                                  ? _c("span", [_vm._v("Change image")])
+                                  : _c("span", [_vm._v("Select an image")])
+                              ]
+                            )
+                          : _vm._e()
+                      ]),
+                      _vm._v(" "),
+                      _c("input", {
+                        ref: "inputImage",
+                        staticStyle: { display: "none" },
+                        attrs: { type: "file", enctype: "multipart/form-data" },
+                        on: { change: _vm.imageSelected }
+                      }),
+                      _vm._v(" "),
+                      _vm.modal.product.image
+                        ? _c("img", {
+                            staticClass: "img-thumbnail",
+                            attrs: { src: _vm.modal.product.image }
+                          })
+                        : _vm._e()
+                    ])
                   ]),
                   _vm._v(" "),
                   _c("div", { staticClass: "modal-footer" }, [
@@ -37922,19 +37989,6 @@ var staticRenderFns = [
       },
       [_c("span", { attrs: { "aria-hidden": "true" } }, [_vm._v("×")])]
     )
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "form-group" }, [
-      _c("label", { attrs: { for: "inputImage" } }, [_vm._v("Image")]),
-      _vm._v(" "),
-      _c("input", {
-        staticClass: "form-control",
-        attrs: { type: "file", id: "inputImage", placeholder: "Select image" }
-      })
-    ])
   }
 ]
 render._withStripped = true

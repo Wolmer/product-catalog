@@ -25,13 +25,13 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        $category = $request->get('category');
+        $image    = $this->uploadImage(request()->image);
         $product  = new Product([
-            'category_id' => $category['id'],
+            'category_id' => $request->get('category_id'),
             'name'        => $request->get('name'),
             'description' => $request->get('description'),
             'price'       => $request->get('price'),
-            'image'       => $request->get('image'),
+            'image'       => $image,
         ]);
 
         $product->save();
@@ -41,15 +41,14 @@ class ProductController extends Controller
 
     public function update($id, Request $request)
     {
-        $product  = Product::find($id);
-        $category = $request->get('category');
-
+        $image   = $this->uploadImage(request()->image);
+        $product = Product::find($id);
         $product->update([
-            'category_id' => $category['id'],
+            'category_id' => $request->get('category_id'),
             'name'        => $request->get('name'),
             'description' => $request->get('description'),
             'price'       => $request->get('price'),
-            'image'       => $request->get('image'),
+            'image'       => $image,
         ]);
 
         return response()->json('successfully updated');
@@ -62,5 +61,15 @@ class ProductController extends Controller
         $product->delete();
 
         return response()->json('successfully deleted');
+    }
+
+    private function uploadImage($image)
+    {
+        $imagePath = 'img/products';
+        $imageName = time() . '.' . $image->getClientOriginalExtension();
+
+        request()->image->move(public_path($imagePath), $imageName);
+
+        return '/' . $imagePath . '/' . $imageName;
     }
 }
