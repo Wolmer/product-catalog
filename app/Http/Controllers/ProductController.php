@@ -41,8 +41,13 @@ class ProductController extends Controller
 
     public function update($id, Request $request)
     {
-        $image   = $this->uploadImage(request()->image);
         $product = Product::find($id);
+        $image   = $product->image;
+
+        if (request()->image !== 'undefined') {
+            $image   = $this->uploadImage(request()->image);
+        }
+
         $product->update([
             'category_id' => $request->get('category_id'),
             'name'        => $request->get('name'),
